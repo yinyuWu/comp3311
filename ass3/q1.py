@@ -4,6 +4,7 @@ import cs3311
 conn = cs3311.connect()
 
 cur = conn.cursor()
+query = "select "
 
 # TODO
 
