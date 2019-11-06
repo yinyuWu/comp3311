@@ -4,7 +4,7 @@ import cs3311
 import sys
 import time
 
-start = time.time()
+
 conn = cs3311.connect()
 
 cur = conn.cursor()
@@ -22,13 +22,14 @@ query = "select * from q3 where str = %s"
 cur.execute(query, value_list)
 res = cur.fetchall()
 
+# get buildings
 building_list = []
 
 for each in res:
     building_list.append(each[0])
 
-building_list = (set)(building_list)
-building_list = (list)(building_list)
+building_list = set(building_list)
+building_list = list(building_list)
 building_list.sort()
 
 for each in building_list:
@@ -38,13 +39,13 @@ for each in building_list:
     for r in res:
         if (r[0] == each):
             course_list.append(r[1])
-    course = (set)(course_list)
-    course = (list)(course)
+    course = set(course_list)
+    course = list(course)
     c = ''
-    course.sort(key=lambda x: (int)(c.join(list(x)[4:])))
+    course.sort(key=lambda x: int(c.join(list(x)[4:])))
     # print results
-    for each in course:
-        print(" " + each)
+    for r in course:
+        print(" " + r)
     
 # TODO
 
