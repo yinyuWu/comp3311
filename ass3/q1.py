@@ -8,7 +8,8 @@ query = "select * from q1 order by code"
 cur.execute(query)
 res = cur.fetchall()
 for each in res:
-    percent = (int)((each[1]/each[2]) * 100 + 0.5)
+    percent = (each[1]/each[2]) * 100
+    percent = int(round(percent, 0))
     print("{} {}%".format(each[0], str(percent)))
 
 

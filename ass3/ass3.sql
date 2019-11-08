@@ -45,3 +45,22 @@ where e.class_id = c.id and c.type_id = t.id group by c.id, t.name;
 create or replace view q5 as 
 select tc.code, cc.tag, cc.type_name, cc.quota, cc.count from q5_term_course as tc, q5_class_count as cc 
 where tc.id = cc.course_id and cc.count < 0.5*cc.quota group by tc.code, cc.tag, cc.quota, cc.count, cc.type_name;
+
+--helper views for q7
+create or replace view q7_time as 
+select r.code, m.day, m.start_time, m.end_time, m.weeks_binary, t.name from 
+rooms as r, meetings as m, terms as t, courses as c, classes as cl 
+where r.id = m.room_id and m.class_id = cl.id and cl.course_id = c.id and c.term_id = t.id and r.code like 'K-%';
+
+create or replace view q7_hours as 
+select *, (end_time/100)*60 + mod(end_time, 100) as end_min, (start_time/100)*60 + mod(start_time, 100) as start_min from 
+q7_time;
+
+create or replace view q7_diff as 
+select *, (end_min - start_min)/60.0 as diff from q7_hours;
+
+create or replace view q7_weeks as 
+select *, length(replace(substring(weeks_binary, 1, 10), '0', '')) as length from q7_diff;
+
+create or replace view q7 as 
+select code, name, sum(diff*length) from q7_weeks group by code, name;

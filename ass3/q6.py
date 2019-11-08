@@ -8,6 +8,7 @@ cur = conn.cursor()
 query = "select id, weeks, weeks_binary from meetings"
 cur.execute(query)
 res = cur.fetchall()
+res = sorted(res, key=lambda x: x[0])
 # split '1-5,7-11'
 for r in res:
     wb = '00000000000'
@@ -16,7 +17,7 @@ for r in res:
     # if contains 'N' or '<'
     if weeks.find('N') >= 0 or weeks.find('<') >= 0:
         wb = ''.join(wb)
-        q = 'update meetings set weeks_binary = ' + wb + ' where id = ' + str(r[0])
+        q = "update meetings set weeks_binary = " + "'" + wb + "'" + " where id = " + str(r[0])
         cur.execute(q)
         continue
     #split by ','
@@ -37,7 +38,7 @@ for r in res:
                 wb[j-1] = '1'
     wb = ''.join(wb)
     # update
-    q = 'update meetings set weeks_binary = ' + wb + ' where id = ' + str(r[0])
+    q = "update meetings set weeks_binary = " + "'" + wb + "'" + " where id = " + str(r[0])
     cur.execute(q)
 conn.commit()
 cur.close()
