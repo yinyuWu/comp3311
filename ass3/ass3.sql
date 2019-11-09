@@ -67,7 +67,7 @@ select code, name, sum(diff*length) from q7_weeks group by code, name;
 
 --helper views for q8
 create or replace view q8_time as 
-select s.code, ct.name, m.day, m.start_time, m.end_time 
+select s.code, cl.id, ct.name, m.day, m.start_time, m.end_time 
 from subjects as s, courses as c, classes as cl, meetings as m, terms as t, classTypes as ct  
 where s.id = c.subject_id and c.id = cl.course_id and cl.type_id = ct.id and m.class_id = cl.id and t.name = '19T3' 
 and c.term_id = t.id;
@@ -78,7 +78,3 @@ q8_time;
 
 create or replace view q8 as 
 select *, (end_min - start_min)/60.0 as diff from q8_hour;
-
-create or replace view q8_class as 
-select s.code, cl.id, ct.name from subjects as s, classes as cl, courses as c, classTypes as ct, terms as t 
-where s.id = c.subject_id and cl.course_id = c.id and cl.type_id = ct.id and t.name='19T3' and c.term_id = t.id;
