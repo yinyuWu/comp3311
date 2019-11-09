@@ -64,3 +64,21 @@ select *, length(replace(substring(weeks_binary, 1, 10), '0', '')) as length fro
 
 create or replace view q7 as 
 select code, name, sum(diff*length) from q7_weeks group by code, name;
+
+--helper views for q8
+create or replace view q8_time as 
+select s.code, ct.name, m.day, m.start_time, m.end_time 
+from subjects as s, courses as c, classes as cl, meetings as m, terms as t, classTypes as ct  
+where s.id = c.subject_id and c.id = cl.course_id and cl.type_id = ct.id and m.class_id = cl.id and t.name = '19T3' 
+and c.term_id = t.id;
+
+create or replace view q8_hour as 
+select *, (end_time/100)*60 + mod(end_time, 100) as end_min, (start_time/100)*60 + mod(start_time, 100) as start_min from 
+q8_time;
+
+create or replace view q8 as 
+select *, (end_min - start_min)/60.0 as diff from q8_hour;
+
+create or replace view q8_class as 
+select s.code, cl.id, ct.name from subjects as s, classes as cl, courses as c, classTypes as ct, terms as t 
+where s.id = c.subject_id and cl.course_id = c.id and cl.type_id = ct.id and t.name='19T3' and c.term_id = t.id;
