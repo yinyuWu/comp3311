@@ -17,6 +17,7 @@ else:
         args.append(sys.argv[i+1])
 
 timetable = []
+total_hours = 0.0
 # for each course find a timetable
 for course in args:
     value_list = []
@@ -52,9 +53,31 @@ for course in args:
         # insert meetings to class table
         for each in res:
             timetable.append(each)
+            hour = float(each[-1])
+            total_hours += hour
 # print timetable
-day = {"Mon" : 1, "Tue" : 2, "Wed" : 3, "Thu" : 4, "Fri" : 5}
+day_dic = {"Mon" : 1, "Tue" : 2, "Wed" : 3, "Thu" : 4, "Fri" : 5}
 
+# get all days and sort 
+days = []
+for time in timetable:
+    days.append(time[3])
+days = set(days)
+days = list(days)
+days = sorted(days, key= lambda x: day_dic[x])
+
+print("Total hours: {:.1f}".format(total_hours))
+for d in days:
+    # find meetings on this day
+    print("  {}".format(d))
+    meeting_day = []
+    for cls in timetable:
+        if cls[3] == d:
+            meeting_day.append(cls)
+    meeting_day = sorted(meeting_day, key= lambda x: x[4])
+    # print courses in that day
+    for each in meeting_day:
+        print("    {} {}: {}-{}".format(each[0], each[2], each[4], each[5]))
 
 
 cur.close()
