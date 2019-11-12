@@ -3,12 +3,6 @@
 import cs3311
 import sys
 
-def deleteMeetings(id, timetable):
-    for t in timetable:
-        if t[1] == id:
-            timetable.remove(t)
-
-
 def calculate_total_hours(days, timetable):
     total = 0
     for d in days:
@@ -25,18 +19,7 @@ def calculate_total_hours(days, timetable):
         total += (end-start)/60.0
     return total
 
-def meeting_check(to_add, timetable):
-    for t in timetable:
-        # to_add is not the same day, before t, after t allowed
-        if to_add[3] != t[3]:
-            continue
-        if to_add[3] == t[3] and to_add[5] <= t[4]:
-            continue
-        if to_add[3] == t[3] and to_add[4] >= t[5]:
-            continue
-        else:
-            return False
-    return True
+
 
 conn = cs3311.connect()
 
@@ -69,6 +52,7 @@ for course in args:
     meeting_types = list(meeting_types)
     #print(meeting_types)
     # for each class type, find classes
+
     class_list = []
     for t in meeting_types:
         q_list = []
@@ -83,23 +67,13 @@ for course in args:
             diff_class.append(c[0])
         #print(diff_class)
         # insert meetings into timetable
-        for dc in diff_class:
-            q = 'select * from q8 where id = %s'
-            cur.execute(q, [dc])
-            res = cur.fetchall()
-            success_cnt = 0
-            # insert meetings to class table
-            for each in res:
-                if (meeting_check(each, timetable) == False):
-                    # if fail to insert, delete all classes inserted
-                    deleteMeetings(dc, timetable)
-                    break
-                timetable.append(each)
-                success_cnt += 1
-            # if all meetings are inserted successfully
-            if (success_cnt == len(res)):
-                break
-            
+        dc = diff_class[0]
+        q = 'select * from q8 where id = %s'
+        cur.execute(q, [dc])
+        res = cur.fetchall()
+        # insert meetings to class table
+        for r in res:
+            timetable.append(r)
 
 
 
