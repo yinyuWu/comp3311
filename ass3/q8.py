@@ -19,6 +19,40 @@ def calculate_total_hours(days, timetable):
         total += (end-start)/60.0
     return total
 
+def checkAvail(course, timetable):
+    for c in timetable:
+        if course[3] != c[3]:
+            continue
+        if course[4] >= c[5]:
+            continue
+        elif course[5] <= c[4]:
+            continue
+        else:
+            return False
+    return True
+
+def removeClass(id, timetable):
+    for t in timetable:
+        if t[1] == id:
+            timetable.remove(t)
+
+def checkFinish(course_types, timetable):
+    #print(course_types)
+    #print(timetable)
+    for course in course_types:
+        for ct in course_types[course]:
+            # find course with type ct in timetable if not found return false
+            check = False
+            for t in timetable:
+                if t[0] == course and t[2] == ct:
+                    check = True
+                    break
+            if check == False:
+                return False
+            # if find course with type ct, continue
+    return True
+
+
 
 
 conn = cs3311.connect()
@@ -36,6 +70,7 @@ else:
         args.append(sys.argv[i+1])
 
 timetable = []
+course_types = {}
 total_hours = 0.0
 # for each course find a timetable
 for course in args:
@@ -52,28 +87,44 @@ for course in args:
     meeting_types = list(meeting_types)
     #print(meeting_types)
     # for each class type, find classes
+    course_types[course] = meeting_types
 
-    class_list = []
-    for t in meeting_types:
-        q_list = []
-        q_list.append(course)
-        q_list.append(t)
-        q = 'select distinct id from q8 where code = %s and name = %s'
-        cur.execute(q, q_list)
-        cl = cur.fetchall()
-        # insert different classes' code into list
-        diff_class = []
-        for c in cl:
-            diff_class.append(c[0])
-        #print(diff_class)
-        # insert meetings into timetable
-        dc = diff_class[0]
-        q = 'select * from q8 where id = %s'
-        cur.execute(q, [dc])
-        res = cur.fetchall()
-        # insert meetings to class table
-        for r in res:
-            timetable.append(r)
+while (1):
+    if checkFinish(course_types, timetable) == True:
+        break
+
+    for course in course_types:
+        class_list = []
+        for t in course_types[course]:
+            q_list = []
+            q_list.append(course)
+            q_list.append(t)
+            q = 'select distinct id from q8 where code = %s and name = %s'
+            cur.execute(q, q_list)
+            cl = cur.fetchall()
+            # insert different classes' code into list
+            diff_class = []
+            for c in cl:
+                diff_class.append(c[0])
+            #print(diff_class)
+            # insert meetings into timetable
+            for dc in diff_class:
+                q = 'select * from q8 where id = %s'
+                cur.execute(q, [dc])
+                res = cur.fetchall()
+                # insert meetings with code 'dc' to class table
+                # if insert successfully, we don't need other classes then break
+                insert_success = True
+                for r in res:
+                    if checkAvail(r, timetable) == False:
+                        removeClass(r[1], timetable)
+                        insert_success = False
+                        break
+                    else:
+                        timetable.append(r)
+                if (insert_success == True):
+                    break
+                
 
 
 
