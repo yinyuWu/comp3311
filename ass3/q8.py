@@ -3,6 +3,7 @@
 import cs3311
 import sys
 
+# -------------Helper Function
 def calculate_total_hours(days, timetable):
     total = 0
     for d in days:
@@ -23,7 +24,7 @@ def checkAvail(course, timetable):
     for c in timetable:
         if course[3] != c[3]:
             continue
-        if course[4] >= c[5]:
+        elif course[4] >= c[5]:
             continue
         elif course[5] <= c[4]:
             continue
@@ -53,12 +54,40 @@ def checkFinish(course_types, timetable):
     return True
 
 
-
+# ------------------------------Initianization
 
 conn = cs3311.connect()
 
 cur = conn.cursor()
+timetable = []
+find = False
+def dfs(v, visited, graph, types):
+    global find
+    global timetable
+    if find == True:
+        return
+    visited[v] = True
+    # get data
+    q = 'select * from q8 where id = %s'
+    cur.execute(q, [v])
+    res = cur.fetchall()
+    for r in res:
+        if checkAvail(r, timetable) == True:
+            timetable.append(r)
+        else:
+            removeClass(v, timetable)
+            return
+    # if it is the last point
+    if graph[v] == [] and checkFinish(types, timetable):
+        find = True
+    # if it is an intermadiate point
+    for each in graph[v]:
+        if visited[each] == False:
+            dfs(each, visited, graph, types)
 
+
+
+# ------------------------------Main function
 # get arguments from bash
 args = []
 if (len(sys.argv) == 1):
@@ -69,10 +98,10 @@ else:
     for i in range(args_len):
         args.append(sys.argv[i+1])
 
-timetable = []
+types = {}
 course_types = {}
 total_hours = 0.0
-# for each course find a timetable
+# find all classes for each type of each course
 for course in args:
     value_list = []
     value_list.append(course)
@@ -87,45 +116,54 @@ for course in args:
     meeting_types = list(meeting_types)
     #print(meeting_types)
     # for each class type, find classes
-    course_types[course] = meeting_types
+    types[course] = meeting_types
+    # store type and course code into t_dic
+    t_dic = {}
+    for t in meeting_types:
+        # find course, type from database
+        q = 'select distinct id from q8 where code = %s and name = %s'
+        q_list = []
+        q_list.append(course)
+        q_list.append(t)
 
-while (1):
-    if checkFinish(course_types, timetable) == True:
-        break
+        # insert class code into list
+        cur.execute(q, q_list)
+        cl = cur.fetchall()
+        diff_class_code = []
+        for c in cl:
+            diff_class_code.append(c[0])
+        t_dic[t] = diff_class_code
+    # update course type: {course: {type : code}}
+    course_types[course] = t_dic
 
-    for course in course_types:
-        class_list = []
-        for t in course_types[course]:
-            q_list = []
-            q_list.append(course)
-            q_list.append(t)
-            q = 'select distinct id from q8 where code = %s and name = %s'
-            cur.execute(q, q_list)
-            cl = cur.fetchall()
-            # insert different classes' code into list
-            diff_class = []
-            for c in cl:
-                diff_class.append(c[0])
-            #print(diff_class)
-            # insert meetings into timetable
-            for dc in diff_class:
-                q = 'select * from q8 where id = %s'
-                cur.execute(q, [dc])
-                res = cur.fetchall()
-                # insert meetings with code 'dc' to class table
-                # if insert successfully, we don't need other classes then break
-                insert_success = True
-                for r in res:
-                    if checkAvail(r, timetable) == False:
-                        removeClass(r[1], timetable)
-                        insert_success = False
-                        break
-                    else:
-                        timetable.append(r)
-                if (insert_success == True):
-                    break
-                
+#############################################
+# put all possible permutations into list
+courses = []
+for course in course_types:
+    #print(course)
+    c_typs = course_types[course]
+    for c in c_typs:
+        course_code = c_typs[c]
+        courses.append(course_code)
+        #print(course_code)
 
+courses = sorted(courses, key=lambda x: len(x))
+# create tree map for courses
+course_map = {}
+for i in range(len(courses)-1):
+    for each in courses[i]:
+        course_map[each] = courses[i+1]
+for each in courses[-1]:
+    course_map[each] = []
+#print(course_map)
+
+# use dfs to find permutations
+# init all visited as -1
+visited = {}
+for each in course_map:
+    visited[each] = False
+
+dfs(list(course_map.keys())[0], visited, course_map, types)
 
 
 # print timetable
