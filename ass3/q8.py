@@ -150,21 +150,12 @@ for course in course_types:
 courses = sorted(courses, key=lambda x: len(x))
 # create tree map for courses
 course_map = {}
-map_count = {}
-cnt = 0
-for i in range(0, len(courses)-1):
+for i in range(len(courses)-1):
     for each in courses[i]:
         course_map[each] = courses[i+1]
-        map_count[each] = cnt
-        cnt += 1
 for each in courses[-1]:
     course_map[each] = []
-    map_count[each] = cnt
-    cnt += 1
-# sort course_map
-course_map = sorted(course_map.items(), key = lambda kv: map_count[kv[0]])
-course_map = dict(course_map)
-
+#print(course_map)
 
 # use dfs to find permutations
 # init all visited as -1
@@ -172,7 +163,7 @@ visited = {}
 for each in course_map:
     visited[each] = False
 
-dfs(list(course_map.keys())[0], visited, course_map, types)
+dfs(courses[0][0], visited, course_map, types)
 
 
 # print timetable
